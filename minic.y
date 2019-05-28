@@ -25,7 +25,7 @@ void display(struct node *,int);
 //  %type 定义非终结符的语义值类型
 %type  <ptr> program ExtDefList ExtDef  Specifier ExtDecList 
 %type  <ptr> FuncDec CompSt VarList VarDec ParamDec Stmt StmList DefList Def DecList Dec Exp Args 
-%type  <ptr> StructDec ForCondition
+%type  <ptr> StructDec ForCondition StructDefList StructDef StructList
 //% token 定义终结符的语义值类型
 %token <type_int> INT              //指定INT的语义值是type_int，有词法分析得到的数值
 %token <type_id> ID RELOP TYPE  //指定ID,RELOP 的语义值是type_id，有词法分析得到的标识符字符串
@@ -61,7 +61,7 @@ ExtDef:   Specifier ExtDecList SEMI   {$$=mknode(EXT_VAR_DEF,$1,$2,NULL,yylineno
          | error SEMI   {$$=NULL; }
          ;
 
-StructDec: STRUCT ID LC DefList RC {$$=mknode(STRUCT_DEF,$4,NULL,NULL,yylineno); strcpy($$->type_id,$2);}
+StructDec: STRUCT ID LC StructDefList RC {$$=mknode(STRUCT_DEF,$4,NULL,NULL,yylineno); strcpy($$->type_id,$2);}
          ;
 Specifier:  TYPE    {$$=mknode(TYPE,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);$$->type=!strcmp($1,"int")?INT:(!strcmp($1, "char")?CHAR:FLOAT);}   
           | STRUCT ID {$$=mknode(TYPE,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$2);/* 缺少类型说明，在语义分析中应该增加该项*/} // 结构体作为变量类型
@@ -99,14 +99,23 @@ Stmt:   Exp SEMI    {$$=mknode(EXP_STMT,$1,NULL,NULL,yylineno);}
 DefList: {$$=NULL; }
         | Def DefList {$$=mknode(DEF_LIST,$1,$2,NULL,yylineno);}
         ;
+StructDefList: {$$=NULL;}
+        | StructDef StructDefList {$$=mknode(DEF_LIST, $1,$2,NULL,yylineno);}
+        ;
+
 Def:    Specifier DecList SEMI {$$=mknode(VAR_DEF,$1,$2,NULL,yylineno);}
         ;
+StructDef: Specifier StructList SEMI {$$=mknode(VAR_DEF,$1,$2,NULL,yylineno);}
+
 DecList: Dec  {$$=mknode(DEC_LIST,$1,NULL,NULL,yylineno);}
        | Dec COMMA DecList  {$$=mknode(DEC_LIST,$1,$3,NULL,yylineno);}
        ;
+StructList: VarDec {$$=mknode(DEC_LIST,$1,NULL,NULL,yylineno);}
+        | VarDec COMMA StructList {$$=mknode(DEC_LIST,$1,$3,NULL,yylineno);}
 Dec:     VarDec  {$$=$1;}
-       | VarDec ASSIGNOP Exp  {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}
+       | VarDec ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}
        ;
+
 Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGNOP");}//$$结点type_id空置未用，正好存放运算符
       | Exp AND Exp   {$$=mknode(AND,$1,$3,NULL,yylineno);strcpy($$->type_id,"AND");}
       | Exp OR Exp    {$$=mknode(OR,$1,$3,NULL,yylineno);strcpy($$->type_id,"OR");}
