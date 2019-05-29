@@ -409,7 +409,7 @@ static yyconst flex_int32_t yy_ec[256] =
        20,   21,    1,    1,   22,   22,   22,   22,   22,   22,
        22,   22,   22,   22,   22,   22,   22,   22,   22,   22,
        22,   22,   22,   22,   22,   22,   22,   22,   22,   22,
-       23,   24,   25,    1,    1,    1,   26,   27,   28,   22,
+       23,   24,   25,    1,   22,    1,   26,   27,   28,   22,
 
        29,   30,   22,   31,   32,   22,   33,   34,   22,   35,
        36,   22,   22,   37,   38,   39,   40,   22,   41,   22,
@@ -891,7 +891,7 @@ YY_RULE_SETUP
 case 10:
 YY_RULE_SETUP
 #line 40 "minic.l"
-{yylval.type_char=parse(yytext); printf("[char, %s]\n", yytext); printf("debug: %c\n", yylval.type_char); return CHAR;}
+{yylval.type_char=parse(yytext); printf("[char, %s]\n", yytext);  return CHAR;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP

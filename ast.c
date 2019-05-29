@@ -44,9 +44,13 @@ void display(struct node *T,int indent)  {//对抽象语法树的先根遍历
 	case PARAM_LIST:    display(T->ptr[0],indent);     //依次显示全部参数类型和名称，
                         display(T->ptr[1],indent);
                         break;
-	case PARAM_DEC:     strcpy(t, T->ptr[0]->type==INT?"int": T->ptr[0]==CHAR?"char":"float");
+	case PARAM_DEC:     strcpy(t, T->ptr[0]->type==INT?"int": T->ptr[0]->type==CHAR?"char":T->ptr[0]->type==FLOAT?"float":"struct ");
                         if (strstr(T->ptr[0]->type_id, "数组"))
                             strcat(t, "数组");
+                        if (strcmp(t, "struct ") == 0) {
+
+                            strcat(t, T->ptr[0]->type_id);
+                        }
                         printf("%*c类型：%s, 参数名：%s\n", indent,' ',  \
                                t,T->ptr[1]->type_id);
                         break;
@@ -187,4 +191,39 @@ void display(struct node *T,int indent)  {//对抽象语法树的先根遍历
     default: break;
          }
       }
+}
+
+/* 实现myitoa函数的源码 */ 
+char *mymyitoa(int num,char *str,int radix) 
+{  
+    /* 索引表 */ 
+    char index[]="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"; 
+    unsigned unum; /* 中间变量 */ 
+    int i=0,j,k; 
+    /* 确定unum的值 */ 
+    if(radix==10&&num<0) /* 十进制负数 */ 
+    { 
+        unum=(unsigned)-num; 
+        str[i++]='-'; 
+    } 
+    else unum=(unsigned)num; /* 其它情况 */ 
+    /* 逆序 */ 
+    do  
+    { 
+        str[i++]=index[unum%(unsigned)radix]; 
+        unum/=radix; 
+    }while(unum); 
+    str[i]='\0'; 
+    /* 转换 */ 
+    if(str[0]=='-') k=1; /* 十进制负数 */ 
+    else k=0; 
+    /* 将原来的“/2”改为“/2.0”，保证当num在16~255之间，radix等于16时，也能得到正确结果 */ 
+    char temp; 
+    for(j=k;j<=(i-k-1)/2.0;j++) 
+    { 
+        temp=str[j]; 
+        str[j]=str[i-j-1]; 
+        str[i-j-1]=temp; 
+    } 
+    return str; 
 }

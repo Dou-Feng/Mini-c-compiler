@@ -1,8 +1,8 @@
-SOURCEFILE = lex.yy.c minic.tab.c ast.c
+SOURCEFILE = lex.yy.c minic.tab.c ast.c analysis.c
 HEADFILE = minic.tab.h def.h
-
+FLAGS =  
 all: $(SOURCEFILE) $(HEADFILE) 
-	gcc -o minic $(SOURCEFILE) -w 
+	gcc -o minic $(SOURCEFILE) $(FLAGS)  
 
 .PHONY: all clean
 

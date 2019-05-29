@@ -1,0 +1,23 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "shell",
+            "command": "clang",
+            "args": [
+                "-g",
+                "minic.tab.c",
+                "lex.yy.c",
+                "ast.c",
+                "analysis.c",
+                "-o",
+                "minic"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ],
+    "version": "2.0.0"
+}

@@ -1574,7 +1574,7 @@ yyreduce:
     {
         case 2:
 #line 53 "minic.y"
-    { display((yyvsp[(1) - (1)].ptr),0); ;}
+    {  semantic_Analysis0((yyvsp[(1) - (1)].ptr));}
     break;
 
   case 3:
@@ -2136,12 +2136,13 @@ yyreturn:
 
 
 int main(int argc, char *argv[]){
-    yyin=fopen(argv[1],"r");
-    if (!yyin) return 1; 
-    yylineno=1;
-    yyparse();
-    return 0;
-    }
+  yyin=fopen(argv[1],"r");
+  if (!yyin) return 1; 
+  yylineno=1;
+  yyparse();
+  
+  return 0;
+}
 
 #include<stdarg.h>
 void yyerror(const char* fmt, ...)

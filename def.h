@@ -38,6 +38,7 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
           char type_char;           // 由字符常数生成的叶节点
 	      };
     struct node *ptr[3];                   //子树指针，由kind确定有多少棵子树
+    int  num; // 统计符号个数
     int level;                    //层号
     int place;                    //表示结点对应的变量或运算结果临时变量在符号表的位置序号
     char Etrue[15],Efalse[15];      //对布尔表达式的翻译时，真假转移目标的标号
@@ -49,6 +50,7 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
     int offset;                   //偏移量
     int width;                   //各种数据占用的字节数
     };
+
 
 struct symbol {  //这里只列出了一个符号表项的部分属性，没考虑属性间的互斥
     char name[33];     //变量或函数名

@@ -50,7 +50,7 @@ void display(struct node *,int);
 
 %%
 
-program: ExtDefList    { display($1,0); }     /*显示语法树,语义分析*/
+program: ExtDefList    {  semantic_Analysis0($1)}     /*显示语法树,语义分析*/
          ; 
 ExtDefList: {$$=NULL;}
           | ExtDef ExtDefList {$$=mknode(EXT_DEF_LIST,$1,$2,NULL,yylineno);}   //每一个EXTDEFLIST的结点，其第1棵子树对应一个外部变量声明或函数
@@ -151,12 +151,13 @@ ForCondition: Exp SEMI Exp SEMI Exp {$$=mknode(FOR_CONDITION,$1,$3,$5,yylineno);
 %%
 
 int main(int argc, char *argv[]){
-    yyin=fopen(argv[1],"r");
-    if (!yyin) return 1; 
-    yylineno=1;
-    yyparse();
-    return 0;
-    }
+  yyin=fopen(argv[1],"r");
+  if (!yyin) return 1; 
+  yylineno=1;
+  yyparse();
+  
+  return 0;
+}
 
 #include<stdarg.h>
 void yyerror(const char* fmt, ...)

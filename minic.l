@@ -17,7 +17,7 @@ typedef union {
 %}
 %option yylineno
 
-id   [A-Za-z][A-Za-z0-9]*  
+id   [_A-Za-z][_A-Za-z0-9]*  
 int    [0-9]+
 float  ([0-9]*\.[0-9]+)|([0-9]+\.)
 char 	'.'|'\\n'|'\\t'|'\\\\'|'\\\''|'\\\"'|'\\0'
@@ -37,7 +37,7 @@ char 	'.'|'\\n'|'\\t'|'\\\\'|'\\\''|'\\\"'|'\\0'
 
 <INITIAL>{int}        {yylval.type_int=atoi(yytext); printf("[int, %s]\n", yytext);return INT;}
 <INITIAL>{float}      {yylval.type_float=atof(yytext); printf("[float, %s]\n", yytext); return FLOAT;}
-<INITIAL>{char}		  {yylval.type_char=parse(yytext); printf("[char, %s]\n", yytext); printf("debug: %c\n", yylval.type_char); return CHAR;}
+<INITIAL>{char}		  {yylval.type_char=parse(yytext); printf("[char, %s]\n", yytext);  return CHAR;}
 <INITIAL>"int"        {strcpy(yylval.type_id,  yytext); printf("[type, %s]\n", yytext); return TYPE;}
 <INITIAL>"float"      {strcpy(yylval.type_id,  yytext); printf("[type, %s]\n", yytext); return TYPE;}
 <INITIAL>"char"		 {strcpy(yylval.type_id, yytext); printf("[type, %s]\n", yytext); return TYPE;}
