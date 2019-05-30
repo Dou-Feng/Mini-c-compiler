@@ -13,6 +13,7 @@ enum node_kind  { EXT_DEF_LIST,EXT_VAR_DEF,FUNC_DEF,FUNC_DEC,EXT_DEC_LIST,PARAM_
 struct opn{
     int kind;                  //标识操作的类型
     int type;                  //标识操作数的类型
+    char isArray;             //是否是数组
     union {
         int     const_int;      //整常数值，立即数
         float   const_float;    //浮点常数值，立即数
@@ -46,6 +47,7 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
     struct codenode *code;         //该结点中间代码链表头指针
     char op[10];
     int  type;                   //结点对应值的类型
+    char isArray;                // 是否是数组
     int pos;                     //语法单位所在位置行号
     int offset;                   //偏移量
     int width;                   //各种数据占用的字节数
@@ -56,6 +58,7 @@ struct symbol {  //这里只列出了一个符号表项的部分属性，没考�
     char name[33];     //变量或函数名
     int level;   //层号，外部变量名或函数名层号为0，形参名为1，每到1个复合语句层号加1，退出减1
     int type;           //变量类型或函数返回值类型
+    char isArray;     // 是否是数组
     int  paramnum;    //形式参数个数
     char alias[10];      //别名，为解决嵌套层次使用，使得每一个数据名称唯一
     char flag;          //符号标记，函数：'F'  变量：'V'   参数：'P'  临时变量：'T'

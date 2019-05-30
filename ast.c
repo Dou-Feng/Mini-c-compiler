@@ -6,6 +6,7 @@ struct node * mknode(int kind,struct node *first,struct node *second, struct nod
   T->ptr[1]=second;
   T->ptr[2]=third;
   T->pos=pos;
+  T->isArray = 0;
   return T;
 }
 
@@ -44,7 +45,7 @@ void display(struct node *T,int indent)  {//对抽象语法树的先根遍历
 	case PARAM_LIST:    display(T->ptr[0],indent);     //依次显示全部参数类型和名称，
                         display(T->ptr[1],indent);
                         break;
-	case PARAM_DEC:     strcpy(t, T->ptr[0]->type==INT?"int": T->ptr[0]->type==CHAR?"char":T->ptr[0]->type==FLOAT?"float":"struct ");
+	case PARAM_DEC:     strcpy(t, T->ptr[0]->type==INT?"int":T->ptr[0]->type==CHAR?"char":T->ptr[0]->type==FLOAT?"float":"struct ");
                         if (strstr(T->ptr[0]->type_id, "数组"))
                             strcat(t, "数组");
                         if (strcmp(t, "struct ") == 0) {
