@@ -1,5 +1,10 @@
 #include "def.h"
 
+int hasRet = 0;
+int inFunc = 0;
+int inLoop = 0;
+struct codenode *crementCode = NULL;
+struct node *crementNode = NULL;
 /* 实现myitoa函数的源码 */ 
 char *myitoa(int num,char *str,int radix) 
 {  
@@ -372,6 +377,9 @@ void boolExp(struct node *T){  //布尔表达式，参考文献[2]p84的思想
                     boolExp(T->ptr[0]);
                     T->code=T->ptr[0]->code;
                     break;
+        default: 
+                semantic_error(T->pos,"","缺少bool表达式");
+                break;
         }
 	}
 }
@@ -392,6 +400,18 @@ void Exp(struct node *T)
                 if (symbolTable.symbols[rtn].flag=='F')
                     semantic_error(T->pos,T->type_id, "是函数名，类型不匹配");
                 else {
+                    if (T->isArray) {
+                        // 分析第一个孩子结点
+                        Exp(T->ptr[0]);
+                        if (T->ptr[0]->type!=INT) {
+                            semantic_error(T->pos,T->type_id, "数组索引类型不为int");
+                        } else if (T->ptr[0]->kind==UMINUS) { // 如果是int类型，而且是uminus类型
+                            struct node *num = T->ptr[0]->ptr[0];
+                            if (num->kind==INT) {
+                                semantic_error(T->pos,T->type_id, "数组索引值不能为负数");
+                            }
+                        }
+                    }
                     T->place=rtn;       //结点保存变量在符号表中的位置
                     T->code=NULL;       //标识符不需要生成TAC
                     T->type=symbolTable.symbols[rtn].type;
@@ -431,6 +451,9 @@ void Exp(struct node *T)
                     Exp(T->ptr[0]);   //处理左值，例中仅为变量
                     T->ptr[1]->offset=T->offset;
                     Exp(T->ptr[1]);
+                    if (T->ptr[0]->type != T->ptr[1]->type) 
+                        semantic_error(T->pos,"", "赋值时变量类型不匹配");
+                    
                     T->type=T->ptr[0]->type;
                     T->width=T->ptr[1]->width;
                     T->code=merge(2,T->ptr[0]->code,T->ptr[1]->code);
@@ -458,6 +481,16 @@ void Exp(struct node *T)
                 Exp(T->ptr[1]);
                 //判断T->ptr[0]，T->ptr[1]类型是否正确，可能根据运算符生成不同形式的代码，给T的type赋值
                 //下面的类型属性计算，没有考虑错误处理情况
+                if (T->ptr[0]->type==CHAR || T->ptr[1]->type==CHAR) {
+                    semantic_error(T->pos,"", "不能计算的表达式");
+                        break;
+                }
+                if (T->kind==DIV) { // 除零错误
+                    if ((T->ptr[1]->kind==INT && T->ptr[1]->type_int==0) || 
+                        (T->ptr[1]->kind==FLOAT && T->ptr[1]->type_float==0.0)) {
+                        semantic_error(T->pos,"", "除零错误");
+                    }
+                }
                 if (T->ptr[0]->type==FLOAT || T->ptr[1]->type==FLOAT)
                      T->type=FLOAT,T->width=T->ptr[0]->width+T->ptr[1]->width+4;
                 else T->type=INT,T->width=T->ptr[0]->width+T->ptr[1]->width+2;
@@ -471,9 +504,29 @@ void Exp(struct node *T)
                 T->code=merge(3,T->ptr[0]->code,T->ptr[1]->code,genIR(T->kind,opn1,opn2,result));
                 T->width=T->ptr[0]->width+T->ptr[1]->width+(T->type==INT?4:8);
                 break;
-	case NOT:   //未写完整
-                break;
-	case UMINUS://未写完整
+	case NOT:
+	case UMINUS:
+                T->ptr[0]->offset=T->offset;
+                Exp(T->ptr[0]);
+                if (T->kind== NOT && T->ptr[0]->type!=INT)
+                    semantic_error(T->pos,"","取反类型不为int");
+                // 如果为char类型，那么就会出错
+                else if (T->ptr[0]->type==CHAR) {
+                    semantic_error(T->pos,"","符号变反的类型不能为char");
+                }
+                T->type=T->ptr[0]->type; // 把子结点的类型赋给父节点
+
+                T->width=T->ptr[0]->width+T->ptr[0]->type==INT?2:4;
+                // 中间代码生成
+                //---------------------------------
+                opn1.kind=ID; strcpy(opn1.id,symbolTable.symbols[T->ptr[0]->place].alias);
+                opn1.type=T->ptr[0]->type;opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
+                result.kind=ID; strcpy(result.id,symbolTable.symbols[T->place].alias);
+                result.type=T->type; result.offset=symbolTable.symbols[T->place].offset;
+                T->code=merge(2,T->ptr[0]->code,genIR(T->kind,opn1,opn2,result));
+                T->width=T->ptr[0]->width+(T->type==INT)?4:(T->type==CHAR?2:8); // maybe have a bug
+
+                //---------------------------------
                 break;
     case FUNC_CALL: //根据T->type_id查出函数的定义，如果语言中增加了实验教材的read，write需要单独处理一下
                 rtn=searchSymbolTable(T->type_id);
@@ -494,7 +547,7 @@ void Exp(struct node *T)
                     T->code=T->ptr[0]->code;
                     }
                 else {T->width=width; T->code=NULL;}
-                match_param(rtn,T->ptr[0]);   //处理所以参数的匹配
+                match_param(rtn,T->ptr[0]);   //处理所有参数的匹配
                     //处理参数列表的中间代码
                 T0=T->ptr[0];
                 while (T0) {
@@ -521,12 +574,72 @@ void Exp(struct node *T)
                     T->width+=T->ptr[1]->width;
                     T->code=merge(2,T->code,T->ptr[1]->code);
                     }
+                break; 
+    case BREAK: 
+                if (!inLoop)
+                    semantic_error(T->pos,"","break不在循环中");
                 break;
-    case ARRAY_VAR:
+    case CONTINUE:
+                if (!inLoop)
+                    semantic_error(T->pos,"","continue不在循环中");
+                break;
+    case INCREMENT: 
+    case DECREMENT:
+                // 生成临时变量
+                T->ptr[1] = mknode(INT, NULL,NULL,NULL,T->pos);
+                T->ptr[1]->type_int = 1;
+
+                crementNode = mknode(T->kind==INCREMENT?PLUS:MINUS,T->ptr[0], T->ptr[1],NULL,T->pos);
+                Exp(crementNode);
+                // 把生成的临时变量赋值给T
+                if (T->ptr[0]->kind!=ID) {
+                    semantic_error(T->pos,"","不是可赋值的左值");
+                    break;
+                }
+                result.kind=ID; strcpy(result.id, symbolTable.symbols[crementNode->ptr[0]->place].alias);
+                result.offset = symbolTable.symbols[crementNode->ptr[0]->place].offset;
+                opn1.kind=ID; strcpy(opn1.id, symbolTable.symbols[crementNode->place].alias);
+                opn1.offset = symbolTable.symbols[crementNode->place].offset;
+                if (crementCode)
+                    crementCode=merge(3,crementCode,crementNode->code,genIR(ASSIGNOP,opn1,opn2,result));
+                else 
+                    crementCode=merge(2,crementNode->code,genIR(ASSIGNOP,opn1,opn2,result));
+                T->type = T->ptr[0]->type;
+                T->width = T->ptr[0]->width;
+                T->place = T->ptr[0]->place;
+                break;
+    case PREINCREMENT:
+    case PREDECREMENT:
+                // 生成临时变量
+                T->ptr[1] = mknode(INT, NULL,NULL,NULL,T->pos);
+                T->ptr[1]->type_int = 1;
+                if (T->kind==INCREMENT) {
+                    T->kind = PLUS;
+                    Exp(T);
+                } else {
+                    T->kind = MINUS;
+                    Exp(T);
+                }
+                // 把生成的临时变量赋值给T
+                if (T->ptr[0]->kind!=ID) {
+                    semantic_error(T->pos,"","不是可赋值的左值");
+                    break;
+                }
+                result.kind=ID; strcpy(result.id, symbolTable.symbols[T->ptr[0]->place].alias);
+                result.offset = symbolTable.symbols[T->ptr[0]->place].offset;
+                opn1.kind=ID; strcpy(opn1.id, symbolTable.symbols[T->place].alias);
+                opn1.offset = symbolTable.symbols[T->place].offset;
+                T->type = T->ptr[0]->type;
+                T->width = T->ptr[0]->width;
+                T->place = T->ptr[0]->place;
+                T->code=merge(2,T->code,genIR(ASSIGNOP,opn1,opn2,result));
+                //---------------------------------
                 break;
          }
       }
 }
+
+
 
 void semantic_Analysis(struct node *T)
 {//对抽象语法树的先根遍历,按display的控制结构修改完成符号表管理和语义检查和TAC生成（语句部分）
@@ -566,7 +679,8 @@ void semantic_Analysis(struct node *T)
                                 !strcmp(T->ptr[0]->type_id,"char")?CHAR:
                                 strstr(T->ptr[0]->type_id,"数组")?T->ptr[0]->type:STRUCT;
             if (strstr(T->ptr[0]->type_id,"数组")) T->ptr[1]->isArray = 1;
-                else T->ptr[1]->isArray = 0;
+            else T->ptr[1]->isArray = 0;
+            inFunc = 1; // add by walker
             T->width=0;     //函数的宽度设置为0，不会对外部变量的地址分配产生影响
             T->offset=DX;   //设置局部变量在活动记录中的偏移量初值
             semantic_Analysis(T->ptr[1]); //处理函数名和参数结点部分，这里不考虑用寄存器传递参数
@@ -574,6 +688,9 @@ void semantic_Analysis(struct node *T)
             T->ptr[2]->offset=T->offset;
             strcpy(T->ptr[2]->Snext,newLabel());  //函数体语句执行结束后的位置属性
             semantic_Analysis(T->ptr[2]);         //处理函数体结点
+            if (!hasRet)
+                semantic_error(T->pos,"","缺少返回值");
+            inFunc = 0;
             //计算活动记录大小,这里offset属性存放的是活动记录大小，不是偏移
             symbolTable.symbols[T->ptr[1]->place].offset=T->offset+T->ptr[2]->width;
             T->code=merge(3,T->ptr[1]->code,T->ptr[2]->code,genLabel(T->ptr[2]->Snext));          //函数体的代码作为函数的代码
@@ -583,7 +700,7 @@ void semantic_Analysis(struct node *T)
             if (rtn==-1){
                 semantic_error(T->pos,T->type_id, "函数重复定义");
                 break;
-                }
+            }
             else T->place=rtn;
             result.kind=ID;   strcpy(result.id,T->type_id);
             result.offset=rtn;
@@ -627,6 +744,7 @@ void semantic_Analysis(struct node *T)
             break;
 	case COMP_STM:
             LEV++;
+            hasRet = 0;
             //设置层号加1，并且保存该层局部变量在符号表中的起始位置在symbol_scope_TX
             symbol_scope_TX.TX[symbol_scope_TX.top++]=symbolTable.index;
             T->width=0;
@@ -644,6 +762,7 @@ void semantic_Analysis(struct node *T)
                 T->width+=T->ptr[1]->width;
                 T->code=merge(2,T->code,T->ptr[1]->code);
                 }
+            
              prn_symbol();       //c在退出一个符合语句前显示的符号表
              LEV--;    //出复合语句，层号减1
              symbolTable.index=symbol_scope_TX.TX[--symbol_scope_TX.top]; //删除该作用域中的符号
@@ -682,16 +801,17 @@ void semantic_Analysis(struct node *T)
                     T0->ptr[0]->type=T0->type;  //类型属性向下传递
                     if (T0->ptr[1]) T0->ptr[1]->type=T0->type;
                     T0->ptr[0]->offset=T0->offset;  //类型属性向下传递
-                    if (T0->ptr[1]) T0->ptr[1]->offset=T0->offset+width;
+                    T0->ptr[0]->isArray=T0->isArray; 
+                    if (T0->ptr[1]) {T0->ptr[1]->offset=T0->offset+width; T0->ptr[1]->isArray=T0->isArray; }
                     if (T0->ptr[0]->kind==ID){
-                        rtn=fillSymbolTable(T0->ptr[0]->type_id,newAlias(),LEV,T0->ptr[0]->type,'V',T->offset+T->width,T->isArray);//此处偏移量未计算，暂时为0
+                        rtn=fillSymbolTable(T0->ptr[0]->type_id,newAlias(),LEV,T0->ptr[0]->type,'V',T->offset+T->width,T0->isArray);//此处偏移量未计算，暂时为0
                         if (rtn==-1)
                             semantic_error(T0->ptr[0]->pos,T0->ptr[0]->type_id, "变量重复定义");
                         else T0->ptr[0]->place=rtn;
                         T->width+=width;
                         }
                     else if (T0->ptr[0]->kind==ASSIGNOP){
-                            rtn=fillSymbolTable(T0->ptr[0]->ptr[0]->type_id,newAlias(),LEV,T0->ptr[0]->type,'V',T->offset+T->width,T->isArray);//此处偏移量未计算，暂时为0
+                            rtn=fillSymbolTable(T0->ptr[0]->ptr[0]->type_id,newAlias(),LEV,T0->ptr[0]->type,'V',T->offset+T->width,T0->isArray);//此处偏移量未计算，暂时为0
                             if (rtn==-1)
                                 semantic_error(T0->ptr[0]->ptr[0]->pos,T0->ptr[0]->ptr[0]->type_id, "变量重复定义");
                             else {
@@ -763,7 +883,9 @@ void semantic_Analysis(struct node *T)
                 boolExp(T->ptr[0]);      //循环条件，要单独按短路代码处理
                 T->width=T->ptr[0]->width;
                 strcpy(T->ptr[1]->Snext,newLabel());
+                inLoop = 1;
                 semantic_Analysis(T->ptr[1]);      //循环体
+                inLoop = 0;
                 if (T->width<T->ptr[1]->width) T->width=T->ptr[1]->width;
                 T->code=merge(5,genLabel(T->ptr[1]->Snext),T->ptr[0]->code, \
                 genLabel(T->ptr[0]->Etrue),T->ptr[1]->code,genGoto(T->ptr[1]->Snext));
@@ -774,16 +896,18 @@ void semantic_Analysis(struct node *T)
                 T->code=T->ptr[0]->code;
                 T->width=T->ptr[0]->width;
                 break;
-	case RETURN:if (T->ptr[0]){
+	case RETURN:   if (T->ptr[0]){
                     T->ptr[0]->offset=T->offset;
                     Exp(T->ptr[0]);
                     num=symbolTable.index;
                     do num--; while (symbolTable.symbols[num].flag!='F');
+                    hasRet = 1;
                     if (T->ptr[0]->type!=symbolTable.symbols[num].type) {
                         semantic_error(T->pos, "返回值类型错误","");
                         T->width=0;T->code=NULL;
                         break;
-                        }
+                    }
+                    
                     T->width=T->ptr[0]->width;
                     result.kind=ID; strcpy(result.id,symbolTable.symbols[T->ptr[0]->place].alias);
                     result.offset=symbolTable.symbols[T->ptr[0]->place].offset;
@@ -809,7 +933,14 @@ void semantic_Analysis(struct node *T)
 	case NOT:
 	case UMINUS:
     case FUNC_CALL:
+    case BREAK:
+    case CONTINUE:
+                    crementCode = NULL;
                     Exp(T);          //处理基本表达式
+                    // 处理完表达式，如果有带链接的自增或者自减运算，那么就需要进行连接
+                    if (crementCode) {
+                        T->code=merge(2, T->code, crementCode);
+                    }
                     break;
     }
     }
@@ -826,6 +957,9 @@ void semantic_Analysis0(struct node *T) {
     symbol_scope_TX.top=1;
     T->offset=0;              //外部变量在数据区的偏移量
     semantic_Analysis(T);
-    // prnIR(T->code);
+    int rtn = searchSymbolTable("main");
+    if (rtn == -1)
+        semantic_error(T->pos,"", "缺少main函数");
+    prnIR(T->code);
     // objectCode(T->code);
  }

@@ -1,6 +1,6 @@
 SOURCEFILE = lex.yy.c minic.tab.c ast.c analysis.c
 HEADFILE = minic.tab.h def.h
-FLAGS =  
+FLAGS = -w 
 all: $(SOURCEFILE) $(HEADFILE) 
 	gcc -o minic $(SOURCEFILE) $(FLAGS)  
 

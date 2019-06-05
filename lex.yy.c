@@ -551,6 +551,7 @@ char parse(char *str);
 int yycolumn=1;
 #define YY_USER_ACTION    	yylloc.first_line=yylloc.last_line=yylineno; \
 	yylloc.first_column=yycolumn;	yylloc.last_column=yycolumn+yyleng-1; yycolumn+=yyleng;
+#define MAX_INT "2147483647"
 typedef union {
 	int type_int;
 	int type_float;
@@ -561,7 +562,7 @@ typedef union {
 #define YYSTYPE YYLVAL
 
 
-#line 565 "lex.yy.c"
+#line 566 "lex.yy.c"
 
 #define INITIAL 0
 #define COMMENT 1
@@ -745,10 +746,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 28 "minic.l"
+#line 29 "minic.l"
 
 
-#line 752 "lex.yy.c"
+#line 753 "lex.yy.c"
 
 	if ( !(yy_init) )
 		{
@@ -843,238 +844,238 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 30 "minic.l"
+#line 31 "minic.l"
 {BEGIN COMMENT;}
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 31 "minic.l"
+#line 32 "minic.l"
 {yycolumn=1; BEGIN INITIAL;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 32 "minic.l"
+#line 33 "minic.l"
 {;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 33 "minic.l"
+#line 34 "minic.l"
 {BEGIN COMMENT2;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 34 "minic.l"
+#line 35 "minic.l"
 {BEGIN INITIAL;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 35 "minic.l"
+#line 36 "minic.l"
 {;}
 	YY_BREAK
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 36 "minic.l"
+#line 37 "minic.l"
 {yycolumn=1;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 38 "minic.l"
-{yylval.type_int=atoi(yytext); printf("[int, %s]\n", yytext);return INT;}
+#line 39 "minic.l"
+{if (strlen(yytext)>10) {printf("%d, 整型常量溢出\n", yylineno);} if(strlen(yytext)==10&&strcmp(yytext, MAX_INT)>0){printf("%d, 整型常量溢出\n", yylineno);} yylval.type_int=atoi(yytext); printf("%d, [int, %s]\n", yylineno, yytext);return INT;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 39 "minic.l"
-{yylval.type_float=atof(yytext); printf("[float, %s]\n", yytext); return FLOAT;}
+#line 40 "minic.l"
+{yylval.type_float=atof(yytext); printf("%d, [float, %s]\n", yylineno, yytext); return FLOAT;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 40 "minic.l"
-{yylval.type_char=parse(yytext); printf("[char, %s]\n", yytext);  return CHAR;}
+#line 41 "minic.l"
+{yylval.type_char=parse(yytext); printf("%d, [char, %s]\n", yylineno, yytext);  return CHAR;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 41 "minic.l"
-{strcpy(yylval.type_id,  yytext); printf("[type, %s]\n", yytext); return TYPE;}
+#line 42 "minic.l"
+{strcpy(yylval.type_id,  yytext); printf("%d, [type, %s]\n", yylineno, yytext); return TYPE;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 42 "minic.l"
-{strcpy(yylval.type_id,  yytext); printf("[type, %s]\n", yytext); return TYPE;}
+#line 43 "minic.l"
+{strcpy(yylval.type_id,  yytext); printf("%d, [type, %s]\n", yylineno, yytext); return TYPE;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 43 "minic.l"
-{strcpy(yylval.type_id, yytext); printf("[type, %s]\n", yytext); return TYPE;}
+#line 44 "minic.l"
+{strcpy(yylval.type_id, yytext); printf("%d, [type, %s]\n", yylineno, yytext); return TYPE;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 44 "minic.l"
-{return RETURN;}
+#line 45 "minic.l"
+{printf("%d, [RETURN, %s]\n", yylineno, yytext);return RETURN;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 45 "minic.l"
-{return IF;}
+#line 46 "minic.l"
+{printf("%d, [IF, %s]\n", yylineno, yytext);return IF;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 46 "minic.l"
-{return ELSE;}
+#line 47 "minic.l"
+{printf("%d, [ELSE, %s]\n", yylineno, yytext);return ELSE;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 47 "minic.l"
-{return WHILE;}
+#line 48 "minic.l"
+{printf("%d, [WHILE, %s]\n", yylineno, yytext);return WHILE;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 48 "minic.l"
-{return FOR;}
+#line 49 "minic.l"
+{printf("%d, [FOR, %s]\n", yylineno, yytext);return FOR;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 49 "minic.l"
-{return STRUCT;}
+#line 50 "minic.l"
+{printf("%d, [STRUCT, %s]\n", yylineno, yytext);return STRUCT;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 50 "minic.l"
-{return CONTINUE;}
+#line 51 "minic.l"
+{printf("%d, [CONTINUE, %s]\n", yylineno, yytext);return CONTINUE;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 51 "minic.l"
-{return BREAK;}
+#line 52 "minic.l"
+{printf("%d, [BREAK, %s]\n", yylineno, yytext);return BREAK;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 53 "minic.l"
-{strcpy(yylval.type_id,  yytext); printf("[ID, %s]\n", yytext); return ID;/*由于关键字的形式也符合表示符的规则，所以把关键字的处理全部放在标识符的前面，优先识别*/}
+#line 54 "minic.l"
+{strcpy(yylval.type_id,  yytext); printf("%d, [ID, %s]\n", yylineno, yytext); return ID;/*由于关键字的形式也符合表示符的规则，所以把关键字的处理全部放在标识符的前面，优先识别*/}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 54 "minic.l"
+#line 55 "minic.l"
 {return SEMI;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 55 "minic.l"
+#line 56 "minic.l"
 {return COMMA;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 56 "minic.l"
+#line 57 "minic.l"
 {strcpy(yylval.type_id, yytext);printf("[RELOP, %s]\n", yytext); return RELOP;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 57 "minic.l"
-{return INCREMENT; printf("[INCREMENT]");}
+#line 58 "minic.l"
+{printf("%d, [INCREMENT, %s]\n", yylineno, yytext);return INCREMENT; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 58 "minic.l"
-{return DECREMENT; printf("[DECREAMENT]");}
+#line 59 "minic.l"
+{printf("%d, [DECREMENT, %s]\n", yylineno, yytext);return DECREMENT; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 59 "minic.l"
-{return ASSIGNOP;}
+#line 60 "minic.l"
+{printf("%d, [ASSIGNOP, %s]\n", yylineno, yytext);return ASSIGNOP;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 60 "minic.l"
-{return PLUS;}
+#line 61 "minic.l"
+{printf("%d, [PLUS, %s]\n", yylineno, yytext);return PLUS;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 61 "minic.l"
-{return MINUS;}
+#line 62 "minic.l"
+{printf("%d, [MINUS, %s]\n", yylineno, yytext);return MINUS;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 62 "minic.l"
-{return STAR;}
+#line 63 "minic.l"
+{printf("%d, [STAR, %s]\n", yylineno, yytext);return STAR;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 63 "minic.l"
-{return DIV;}
+#line 64 "minic.l"
+{printf("%d, [DIV, %s]\n", yylineno, yytext);return DIV;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 64 "minic.l"
-{return AND;}
+#line 65 "minic.l"
+{printf("%d, [AND, %s]\n", yylineno, yytext);return AND;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 65 "minic.l"
-{return OR;}
+#line 66 "minic.l"
+{printf("%d, [OR, %s]\n", yylineno, yytext);return OR;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 66 "minic.l"
-{return NOT;}
+#line 67 "minic.l"
+{printf("%d, [NOT, %s]\n", yylineno, yytext);return NOT;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 67 "minic.l"
-{return LP;}
+#line 68 "minic.l"
+{printf("%d, [LP, %s]\n", yylineno, yytext);return LP;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 68 "minic.l"
-{return RP;}
+#line 69 "minic.l"
+{printf("%d, [RP, %s]\n", yylineno, yytext);return RP;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 69 "minic.l"
-{return LC;}
+#line 70 "minic.l"
+{printf("%d, [LC, %s]\n", yylineno, yytext);return LC;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 70 "minic.l"
-{return RC;}
+#line 71 "minic.l"
+{printf("%d, [RC, %s]\n", yylineno, yytext);return RC;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 71 "minic.l"
-{return LM;}
+#line 72 "minic.l"
+{printf("%d, [LM, %s]\n", yylineno, yytext);return LM;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 72 "minic.l"
-{return RM;}
+#line 73 "minic.l"
+{printf("%d, [RM, %s]\n", yylineno, yytext);return RM;}
 	YY_BREAK
 case 42:
 /* rule 42 can match eol */
 YY_RULE_SETUP
-#line 73 "minic.l"
+#line 74 "minic.l"
 {yycolumn=1;}    
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 74 "minic.l"
-{return DOT;}
+#line 75 "minic.l"
+{printf("%d, [ . , %s]\n", yylineno, yytext);return DOT;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 75 "minic.l"
+#line 76 "minic.l"
 {}   
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 76 "minic.l"
+#line 77 "minic.l"
 {printf("Error type A :Mysterious character \"%s\"\n\t at Line %d\n",yytext,yylineno);}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 78 "minic.l"
+#line 79 "minic.l"
 ECHO;
 	YY_BREAK
-#line 1078 "lex.yy.c"
+#line 1079 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENT):
 case YY_STATE_EOF(COMMENT2):
@@ -2085,7 +2086,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 78 "minic.l"
+#line 79 "minic.l"
 
 
 

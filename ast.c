@@ -184,7 +184,7 @@ void display(struct node *T,int indent)  {//对抽象语法树的先根遍历
                     printf("%*c访问地址：\n",indent+3,' ');
                     display(T->ptr[0],  indent+6);
                     break;
-    case CONTINUE:  printf("%*ccontiune\n",indent,' ');
+    case CONTINUE:  printf("%*ccontinue\n",indent,' ');
                     break;
     case BREAK:  printf("%*cbreak\n",indent,' ');
                     break;

@@ -1,8 +1,8 @@
 float d;
 int i; /*测试全局变量声明*/
 
-// i = 5; // 测试全局变量赋值，不能识别
-// int i = 5; // 测试全局变量初始化, 不能识别
+i = 5; // 测试全局变量赋值，不能识别
+int i = 5; // 测试全局变量初始化, 不能识别
 /* qwe2131
 81321 */int[] a ; // 数组定义测试
 struct tree { // 测试结构体
@@ -33,6 +33,7 @@ int f(int a, int[] b) {  // 测试函数定义
 		a = 5 || 6;
 		continue;
 	}
+
 	break;
 	return 0; // 测试返回语句
 }
@@ -42,6 +43,7 @@ struct tree { // 测试结构体
 	float f;
 	int i;
 };
+5 = 1;
 
 
 int semantic_Analysis0(struct node T) {

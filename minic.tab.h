@@ -73,7 +73,9 @@
      BREAK = 289,
      CONTINUE = 290,
      UMINUS = 291,
-     LOWER_THEN_ELSE = 292
+     PREDECREMENT = 292,
+     PREINCREMENT = 293,
+     LOWER_THEN_ELSE = 294
    };
 #endif
 /* Tokens.  */
@@ -111,7 +113,9 @@
 #define BREAK 289
 #define CONTINUE 290
 #define UMINUS 291
-#define LOWER_THEN_ELSE 292
+#define PREDECREMENT 292
+#define PREINCREMENT 293
+#define LOWER_THEN_ELSE 294
 
 
 
@@ -127,7 +131,7 @@ typedef union YYSTYPE
     struct node *ptr;
 }
 /* Line 1529 of yacc.c.  */
-#line 131 "minic.tab.h"
+#line 135 "minic.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

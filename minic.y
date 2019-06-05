@@ -44,13 +44,18 @@ void display(struct node *,int);
 %left PLUS MINUS
 %left STAR DIV
 %right UMINUS NOT
+%left INCREMENT DECREMENT
+%right PREINCREMENT PREDECREMENT
 
 %nonassoc LOWER_THEN_ELSE
 %nonassoc ELSE
 
 %%
 
-program: ExtDefList    { display($1, 0); semantic_Analysis0($1)}     /*显示语法树,语义分析*/
+program: ExtDefList    { 
+                          //display($1, 0); 
+                          semantic_Analysis0($1)
+                        }     /*显示语法树,语义分析*/
          ; 
 ExtDefList: {$$=NULL;}
           | ExtDef ExtDefList {$$=mknode(EXT_DEF_LIST,$1,$2,NULL,yylineno);}   //每一个EXTDEFLIST的结点，其第1棵子树对应一个外部变量声明或函数
@@ -133,13 +138,15 @@ Exp:    Exp ASSIGNOP Exp {$$=mknode(ASSIGNOP,$1,$3,NULL,yylineno);strcpy($$->typ
       | INT           {$$=mknode(INT,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=INT;}
       | FLOAT         {$$=mknode(FLOAT,NULL,NULL,NULL,yylineno);$$->type_float=$1;$$->type=FLOAT;}
       | CHAR          {$$=mknode(CHAR,NULL,NULL,NULL,yylineno); $$->type_char=$1;$$->type=CHAR;}
-      | ID DECREMENT  {$$=mknode(DECREMENT,NULL,NULL,NULL, yylineno); strcpy($$->type_id,$1);}
-      | ID INCREMENT  {$$=mknode(INCREMENT,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
+      | Exp DECREMENT  {$$=mknode(DECREMENT,$1,NULL,NULL, yylineno); strcpy($$->type_id,$1);}
+      | Exp INCREMENT  {$$=mknode(INCREMENT,$1,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
+      | INCREMENT Exp %prec PREINCREMENT {$$=mknode(PREINCREMENT,$2,NULL,NULL,yylineno);strcpy($$->type_id,$2);}
+      | DECREMENT Exp %prec PREDECREMENT {$$=mknode(PREDECREMENT,$2,NULL,NULL, yylineno); strcpy($$->type_id,$2);}
       // 结构体访问
       | ID DOT ID     {struct node* t1=mknode(ID,NULL,NULL,NULL,yylineno);strcpy(t1->type_id,$1);
                         struct node* t2=mknode(ID, NULL,NULL,NULL,yylineno);strcpy(t2->type_id,$3);
                         $$=mknode(STRUCT_VAR,t1,t2,NULL,yylineno); char t[33]; strcpy(t, $1);strcat(t, ".");strcat(t, $3);strcpy($$->type_id, t);}
-      | ID LM Exp RM {$$=mknode(ARRAY_VAR, $3,NULL,NULL,yylineno); strcpy($$->type_id,$1);}// 数组访问
+      | ID LM Exp RM {$$=mknode(ID, $3,NULL,NULL,yylineno); strcpy($$->type_id,$1); $$->isArray=1;}// 数组访问
       | BREAK   {$$=mknode(BREAK,NULL,NULL,NULL,yylineno);}
       | CONTINUE {$$=mknode(CONTINUE,NULL,NULL,NULL,yylineno);}
       ;
