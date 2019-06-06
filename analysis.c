@@ -626,7 +626,7 @@ void Exp(struct node *T)
                 // 生成临时变量
                 T->ptr[1] = mknode(INT, NULL,NULL,NULL,T->pos);
                 T->ptr[1]->type_int = 1;
-                if (T->kind==INCREMENT) {
+                if (T->kind==PREINCREMENT) {
                     T->kind = PLUS;
                     Exp(T);
                 } else {
@@ -924,7 +924,7 @@ void semantic_Analysis(struct node *T)
                 T->code=merge(5,genLabel(T->ptr[1]->Snext),T->ptr[0]->code, \
                 genLabel(T->ptr[0]->Etrue),T->ptr[1]->code,genGoto(T->ptr[1]->Snext));
                 break;
-    case FOR:  // 这里的宽度和offset处理纯属瞎搞，以后会优化
+    case FOR:  // 
                 // 分析初始化的条件
                 T->ptr[0]->offset=T->ptr[1]->offset=T->offset;
                 T->ptr[0]->ptr[0]->offset=T->ptr[0]->offset;
@@ -938,7 +938,9 @@ void semantic_Analysis(struct node *T)
                 T->width=T->ptr[0]->width;
                 strcpy(T->ptr[1]->Snext,newLabel());
                 inLoop = 1; //
-                strcpy(T->ptr[1]->Etrue, T->ptr[1]->Snext); // 向下传递
+                strcpy(T->ptr[0]->ptr[2]->Snext, newLabel());
+                T->ptr[0]->ptr[2]->code=genLabel(T->ptr[0]->ptr[2]->Snext);
+                strcpy(T->ptr[1]->Etrue, T->ptr[0]->ptr[2]->Snext); // 向下传递
                 strcpy(T->ptr[1]->Efalse, T->ptr[0]->ptr[1]->Efalse); // 向下传递
                 // printf("for debug: FOR: T->ptr[1]->Etrue=%s; T->ptr[1]->Efalse=%s;\n",T->ptr[1]->Etrue,T->ptr[1]->Efalse);
                 // printf("for debug: FOR: T->ptr[1]->kind=%d\n", T->ptr[1]->kind);
@@ -1020,7 +1022,7 @@ void semantic_Analysis0(struct node *T) {
     fillSymbolTable("read","",0,INT,'F',4, 0);
     symbolTable.symbols[0].paramnum=0;//read的形参个数
     fillSymbolTable("write","",0,INT,'F',4, 0);
-    symbolTable.symbols[2].paramnum=1;
+    symbolTable.symbols[1].paramnum=1;
     fillSymbolTable("x","",1,INT,'P',12, 0);
     symbol_scope_TX.TX[0]=0;  //外部变量在符号表中的起始序号为0
     symbol_scope_TX.top=1;
