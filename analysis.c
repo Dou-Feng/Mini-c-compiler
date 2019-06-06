@@ -148,6 +148,11 @@ void prnIR(struct codenode *head){
             case DIV: printf("  %s := %s %c %s\n",resultstr,opnstr1, \
                       h->op==PLUS?'+':h->op==MINUS?'-':h->op==STAR?'*':'\\',opnstr2);
                       break;
+            case UMINUS:
+            case NOT:
+                        printf("  %s := %c%s\n",resultstr, \
+                      h->op==UMINUS?'-':'!',opnstr1);
+                      break;
             case FUNCTION: printf("\nFUNCTION %s :\n",h->result.id);
                            break;
             case PARAM:    printf("  PARAM %s\n",h->result.id);
@@ -392,6 +397,7 @@ void Exp(struct node *T)
   struct opn opn1,opn2,result;
   if (T)
 	{
+    // if (T->kind==INCREMENT) printf("T->kind == INCREMENT!\n");
 	switch (T->kind) {
 	case ID:    //查符号表，获得符号表中的位置，类型送type
                 rtn=searchSymbolTable(T->type_id);
@@ -519,13 +525,14 @@ void Exp(struct node *T)
                 T->width=T->ptr[0]->width+T->ptr[0]->type==INT?2:4;
                 // 中间代码生成
                 //---------------------------------
+                T->place=fill_Temp(newTemp(),LEV,T->type,'T',T->offset+T->ptr[0]->width);
                 opn1.kind=ID; strcpy(opn1.id,symbolTable.symbols[T->ptr[0]->place].alias);
                 opn1.type=T->ptr[0]->type;opn1.offset=symbolTable.symbols[T->ptr[0]->place].offset;
                 result.kind=ID; strcpy(result.id,symbolTable.symbols[T->place].alias);
                 result.type=T->type; result.offset=symbolTable.symbols[T->place].offset;
                 T->code=merge(2,T->ptr[0]->code,genIR(T->kind,opn1,opn2,result));
                 T->width=T->ptr[0]->width+(T->type==INT)?4:(T->type==CHAR?2:8); // maybe have a bug
-
+                printf("for debug: symbolTable.symbols[T->place].alias=%s\n", symbolTable.symbols[T->place].alias);
                 //---------------------------------
                 break;
     case FUNC_CALL: //根据T->type_id查出函数的定义，如果语言中增加了实验教材的read，write需要单独处理一下
@@ -578,13 +585,18 @@ void Exp(struct node *T)
     case BREAK: 
                 if (!inLoop)
                     semantic_error(T->pos,"","break不在循环中");
+                printf("For debug: case BREAK, T->Snext=%s; T->Etrue=%s; T->Efalse=%s\n", T->Snext, T->Etrue, T->Efalse);
+                T->code=merge(2,T->code,genGoto(T->Efalse));
                 break;
     case CONTINUE:
                 if (!inLoop)
                     semantic_error(T->pos,"","continue不在循环中");
+                printf("For debug: case CONTINUE, T->Snext=%s; T->Etrue=%s; T->Efalse=%s\n", T->Snext, T->Etrue, T->Efalse);
+                T->code=merge(2,T->code,genGoto(T->Etrue));
                 break;
     case INCREMENT: 
     case DECREMENT:
+                // printf("for debug: crement!!\n");
                 // 生成临时变量
                 T->ptr[1] = mknode(INT, NULL,NULL,NULL,T->pos);
                 T->ptr[1]->type_int = 1;
@@ -610,6 +622,7 @@ void Exp(struct node *T)
                 break;
     case PREINCREMENT:
     case PREDECREMENT:
+                // printf("for debug: Precrement!!\n");
                 // 生成临时变量
                 T->ptr[1] = mknode(INT, NULL,NULL,NULL,T->pos);
                 T->ptr[1]->type_int = 1;
@@ -756,6 +769,10 @@ void semantic_Analysis(struct node *T)
                 T->code=T->ptr[0]->code;
                 }
             if (T->ptr[1]){
+                strcpy(T->ptr[1]->Etrue, T->Etrue); // 向下传递
+                strcpy(T->ptr[1]->Efalse, T->Efalse); // 向下传递
+                // printf("for debug: COMP_STM: T->ptr[1]->Etrue=%s; T->ptr[1]->Efalse=%s;\n",T->ptr[1]->Etrue,T->ptr[1]->Efalse);
+                // printf("for debug: COMP_STM: T->ptr[1]->kind=%d\n", T->ptr[1]->kind);
                 T->ptr[1]->offset=T->offset+T->width;
                 strcpy(T->ptr[1]->Snext,T->Snext);  //S.next属性向下传递
                 semantic_Analysis(T->ptr[1]);       //处理复合语句的语句序列
@@ -831,14 +848,21 @@ void semantic_Analysis(struct node *T)
                 if (!T->ptr[0]) { T->code=NULL; T->width=0; break;}   //空语句序列
                 if (T->ptr[1]) //2条以上语句连接，生成新标号作为第一条语句结束后到达的位置
                     strcpy(T->ptr[0]->Snext,newLabel());
-                else     //语句序列仅有一条语句，S.next属性向下传递
+                 else     //语句序列仅有一条语句，S.next属性向下传递
                     strcpy(T->ptr[0]->Snext,T->Snext);
+
+                strcpy(T->ptr[0]->Etrue, T->Etrue); // 向下传递
+                strcpy(T->ptr[0]->Efalse, T->Efalse); // 向下传递
+                // printf("for debug: STM_LIST: T->ptr[0]->Etrue=%s; T->ptr[0]->Efalse=%s;\n",T->ptr[0]->Etrue,T->ptr[0]->Efalse);
+                // printf("for debug: STM_LIST: T->ptr[0]->kind=%d\n", T->ptr[0]->kind);
                 T->ptr[0]->offset=T->offset;
                 semantic_Analysis(T->ptr[0]);
                 T->code=T->ptr[0]->code;
                 T->width=T->ptr[0]->width;
                 if (T->ptr[1]){     //2条以上语句连接,S.next属性向下传递
                     strcpy(T->ptr[1]->Snext,T->Snext);
+                    strcpy(T->ptr[1]->Etrue, T->Etrue); // 向下传递
+                    strcpy(T->ptr[1]->Efalse, T->Efalse); // 向下传递
                     T->ptr[1]->offset=T->offset;  //顺序结构共享单元方式
 //                  T->ptr[1]->offset=T->offset+T->ptr[0]->width; //顺序结构顺序分配单元方式
                     semantic_Analysis(T->ptr[1]);
@@ -883,6 +907,10 @@ void semantic_Analysis(struct node *T)
                 boolExp(T->ptr[0]);      //循环条件，要单独按短路代码处理
                 T->width=T->ptr[0]->width;
                 strcpy(T->ptr[1]->Snext,newLabel());
+                strcpy(T->ptr[1]->Etrue, T->ptr[1]->Snext);
+                strcpy(T->ptr[1]->Efalse, T->ptr[0]->Efalse);
+                // printf("for debug: WHILE: T->ptr[1]->Etrue=%s; T->ptr[1]->Efalse=%s;\n",T->ptr[1]->Etrue,T->ptr[1]->Efalse);
+                // printf("for debug: WHILE: T->ptr[1]->kind=%d\n", T->ptr[1]->kind);
                 inLoop = 1;
                 semantic_Analysis(T->ptr[1]);      //循环体
                 inLoop = 0;
@@ -890,8 +918,40 @@ void semantic_Analysis(struct node *T)
                 T->code=merge(5,genLabel(T->ptr[1]->Snext),T->ptr[0]->code, \
                 genLabel(T->ptr[0]->Etrue),T->ptr[1]->code,genGoto(T->ptr[1]->Snext));
                 break;
+    case FOR:  // 这里的宽度和offset处理纯属瞎搞，以后会优化
+                // 分析初始化的条件
+                T->ptr[0]->offset=T->ptr[1]->offset=T->offset;
+                T->ptr[0]->ptr[0]->offset=T->ptr[0]->offset;
+                Exp(T->ptr[0]->ptr[0]); 
+                T->ptr[0]->width = T->ptr[0]->ptr[0]->width;
+                // 分析循环条件
+                strcpy(T->ptr[0]->ptr[1]->Etrue,newLabel());
+                strcpy(T->ptr[0]->ptr[1]->Efalse,T->Snext);
+                T->ptr[0]->ptr[1]->offset=T->ptr[0]->offset;
+                boolExp(T->ptr[0]->ptr[1]);
+                T->width=T->ptr[0]->width;
+                strcpy(T->ptr[1]->Snext,newLabel());
+                inLoop = 1; //
+                strcpy(T->ptr[1]->Etrue, T->ptr[1]->Snext); // 向下传递
+                strcpy(T->ptr[1]->Efalse, T->ptr[0]->ptr[1]->Efalse); // 向下传递
+                // printf("for debug: FOR: T->ptr[1]->Etrue=%s; T->ptr[1]->Efalse=%s;\n",T->ptr[1]->Etrue,T->ptr[1]->Efalse);
+                // printf("for debug: FOR: T->ptr[1]->kind=%d\n", T->ptr[1]->kind);
+                semantic_Analysis(T->ptr[1]);
+                Exp(T->ptr[0]->ptr[2]); // 分析最后一个表达式
+                if (T->width<T->ptr[1]->width) T->width=T->ptr[1]->width;
+                inLoop = 0; //
+                T->code=merge(7,T->ptr[0]->ptr[0]->code,genLabel(T->ptr[1]->Snext),T->ptr[0]->ptr[1]->code, \
+                genLabel(T->ptr[0]->ptr[1]->Etrue),T->ptr[1]->code,T->ptr[0]->ptr[2]->code,genGoto(T->ptr[1]->Snext));
+                break;
+    case FOR_CONDITION:
+
+
+                break;
     case EXP_STMT:
                 T->ptr[0]->offset=T->offset;
+                strcpy(T->ptr[0]->Etrue, T->Etrue);
+                strcpy(T->ptr[0]->Efalse, T->Efalse);
+                printf("for debug: EXP_STMT: T->ptr[0]->kind=%d\n", T->ptr[0]->kind);
                 semantic_Analysis(T->ptr[0]);
                 T->code=T->ptr[0]->code;
                 T->width=T->ptr[0]->width;
@@ -922,6 +982,7 @@ void semantic_Analysis(struct node *T)
 	case ID:
     case INT:
     case FLOAT:
+    case CHAR:
 	case ASSIGNOP:
 	case AND:
 	case OR:
@@ -935,6 +996,11 @@ void semantic_Analysis(struct node *T)
     case FUNC_CALL:
     case BREAK:
     case CONTINUE:
+    case INCREMENT:
+    case DECREMENT:
+    case PREDECREMENT:
+    case PREINCREMENT:
+    
                     crementCode = NULL;
                     Exp(T);          //处理基本表达式
                     // 处理完表达式，如果有带链接的自增或者自减运算，那么就需要进行连接

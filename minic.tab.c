@@ -1602,7 +1602,7 @@ yyreduce:
         case 2:
 #line 55 "minic.y"
     { 
-                          //display($1, 0); 
+                          display((yyvsp[(1) - (1)].ptr), 0); 
                           semantic_Analysis0((yyvsp[(1) - (1)].ptr))
                         ;}
     break;
@@ -1895,22 +1895,22 @@ yyreduce:
 
   case 60:
 #line 141 "minic.y"
-    {(yyval.ptr)=mknode(DECREMENT,(yyvsp[(1) - (2)].ptr),NULL,NULL, yylineno); strcpy((yyval.ptr)->type_id,(yyvsp[(1) - (2)].ptr));;}
+    {(yyval.ptr)=mknode(DECREMENT,(yyvsp[(1) - (2)].ptr),NULL,NULL, yylineno); strcpy((yyval.ptr)->type_id,(yyvsp[(1) - (2)].ptr));printf("in minic.y: INCREMENT\n");;}
     break;
 
   case 61:
 #line 142 "minic.y"
-    {(yyval.ptr)=mknode(INCREMENT,(yyvsp[(1) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,(yyvsp[(1) - (2)].ptr));;}
+    {(yyval.ptr)=mknode(INCREMENT,(yyvsp[(1) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,(yyvsp[(1) - (2)].ptr));printf("in minic.y: DECREMENT\n");;}
     break;
 
   case 62:
 #line 143 "minic.y"
-    {(yyval.ptr)=mknode(PREINCREMENT,(yyvsp[(2) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,(yyvsp[(2) - (2)].ptr));;}
+    {(yyval.ptr)=mknode(PREINCREMENT,(yyvsp[(2) - (2)].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,(yyvsp[(2) - (2)].ptr));printf("in minic.y: PREINCREMENT\n");;}
     break;
 
   case 63:
 #line 144 "minic.y"
-    {(yyval.ptr)=mknode(PREDECREMENT,(yyvsp[(2) - (2)].ptr),NULL,NULL, yylineno); strcpy((yyval.ptr)->type_id,(yyvsp[(2) - (2)].ptr));;}
+    {(yyval.ptr)=mknode(PREDECREMENT,(yyvsp[(2) - (2)].ptr),NULL,NULL, yylineno); strcpy((yyval.ptr)->type_id,(yyvsp[(2) - (2)].ptr));printf("in minic.y: PREDECREMENT\n");;}
     break;
 
   case 64:
