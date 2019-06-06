@@ -882,6 +882,8 @@ void semantic_Analysis(struct node *T)
                 boolExp(T->ptr[0]);
                 T->width=T->ptr[0]->width;
                 strcpy(T->ptr[1]->Snext,T->Snext);
+                strcpy(T->ptr[1]->Etrue, T->Etrue); // 向下传递
+                strcpy(T->ptr[1]->Efalse,T->Efalse); // 向下传递
                 semantic_Analysis(T->ptr[1]);      //if子句
                 if (T->width<T->ptr[1]->width) T->width=T->ptr[1]->width;
                 T->code=merge(3,T->ptr[0]->code, genLabel(T->ptr[0]->Etrue),T->ptr[1]->code);
@@ -893,9 +895,13 @@ void semantic_Analysis(struct node *T)
                 boolExp(T->ptr[0]);      //条件，要单独按短路代码处理
                 T->width=T->ptr[0]->width;
                 strcpy(T->ptr[1]->Snext,T->Snext);
+                strcpy(T->ptr[1]->Etrue, T->Etrue); // 向下传递
+                strcpy(T->ptr[1]->Efalse,T->Efalse); // 向下传递
                 semantic_Analysis(T->ptr[1]);      //if子句
                 if (T->width<T->ptr[1]->width) T->width=T->ptr[1]->width;
                 strcpy(T->ptr[2]->Snext,T->Snext);
+                strcpy(T->ptr[2]->Etrue, T->Etrue); // 向下传递
+                strcpy(T->ptr[2]->Efalse,T->Efalse); // 向下传递
                 semantic_Analysis(T->ptr[2]);      //else子句
                 if (T->width<T->ptr[2]->width) T->width=T->ptr[2]->width;
                 T->code=merge(6,T->ptr[0]->code,genLabel(T->ptr[0]->Etrue),T->ptr[1]->code,\
@@ -937,15 +943,12 @@ void semantic_Analysis(struct node *T)
                 // printf("for debug: FOR: T->ptr[1]->Etrue=%s; T->ptr[1]->Efalse=%s;\n",T->ptr[1]->Etrue,T->ptr[1]->Efalse);
                 // printf("for debug: FOR: T->ptr[1]->kind=%d\n", T->ptr[1]->kind);
                 semantic_Analysis(T->ptr[1]);
-                Exp(T->ptr[0]->ptr[2]); // 分析最后一个表达式
+                T->ptr[0]->ptr[2]->offset = T->ptr[0]->offset+T->ptr[0]->ptr[1]->width;
+                semantic_Analysis(T->ptr[0]->ptr[2]); // 分析最后一个表达式
                 if (T->width<T->ptr[1]->width) T->width=T->ptr[1]->width;
                 inLoop = 0; //
                 T->code=merge(7,T->ptr[0]->ptr[0]->code,genLabel(T->ptr[1]->Snext),T->ptr[0]->ptr[1]->code, \
                 genLabel(T->ptr[0]->ptr[1]->Etrue),T->ptr[1]->code,T->ptr[0]->ptr[2]->code,genGoto(T->ptr[1]->Snext));
-                break;
-    case FOR_CONDITION:
-
-
                 break;
     case EXP_STMT:
                 T->ptr[0]->offset=T->offset;

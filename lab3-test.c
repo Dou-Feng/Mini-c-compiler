@@ -6,10 +6,14 @@ int main() {
     //     c = c+ i++;
     // }
     for (i=0;i<5;i++) {
-        --c;
-        c = c + i;
-        continue;
-        break;
+        // --c;
+        // c = c + i;
+        // if (c == 1)
+        //     continue;
+        // else 
+        //     break;
+        // // c++;
+        i = 1;
     }
     return 0;
 }
