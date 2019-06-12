@@ -21,7 +21,8 @@ typedef union {
 id   [_A-Za-z][_A-Za-z0-9]*  
 int    [0-9]+
 float  ([0-9]*\.[0-9]+)|([0-9]+\.)
-char 	'.'|'\\n'|'\\t'|'\\\\'|'\\\''|'\\\"'|'\\0'
+
+char \'(.|(\\[nt0\\\'\"]))\'
 
 %s COMMENT
 %s COMMENT2
