@@ -255,9 +255,11 @@ void ext_var_list(struct node *T){  //处理变量列表
         case EXT_DEC_LIST:
             T->ptr[0]->type=T->type;              //将类型属性向下传递变量结点
             T->ptr[0]->offset=T->offset;          //外部变量的偏移量向下传递
+            T->ptr[0]->isArray=T->isArray;
             T->ptr[1]->type=T->type;              //将类型属性向下传递变量结点
             T->ptr[1]->offset=T->offset+T->width; //外部变量的偏移量向下传递
             T->ptr[1]->width=T->width;
+            T->ptr[1]->isArray=T->isArray;
             ext_var_list(T->ptr[0]);
             ext_var_list(T->ptr[1]);
             T->num=T->ptr[1]->num+1;
@@ -532,7 +534,7 @@ void Exp(struct node *T)
                 result.type=T->type; result.offset=symbolTable.symbols[T->place].offset;
                 T->code=merge(2,T->ptr[0]->code,genIR(T->kind,opn1,opn2,result));
                 T->width=T->ptr[0]->width+(T->type==INT)?4:(T->type==CHAR?2:8); // maybe have a bug
-                printf("for debug: symbolTable.symbols[T->place].alias=%s\n", symbolTable.symbols[T->place].alias);
+                // printf("for debug: symbolTable.symbols[T->place].alias=%s\n", symbolTable.symbols[T->place].alias);
                 //---------------------------------
                 break;
     case FUNC_CALL: //根据T->type_id查出函数的定义，如果语言中增加了实验教材的read，write需要单独处理一下
@@ -585,13 +587,13 @@ void Exp(struct node *T)
     case BREAK: 
                 if (!inLoop)
                     semantic_error(T->pos,"","break不在循环中");
-                printf("For debug: case BREAK, T->Snext=%s; T->Etrue=%s; T->Efalse=%s\n", T->Snext, T->Etrue, T->Efalse);
+                // printf("For debug: case BREAK, T->Snext=%s; T->Etrue=%s; T->Efalse=%s\n", T->Snext, T->Etrue, T->Efalse);
                 T->code=merge(2,T->code,genGoto(T->Efalse));
                 break;
     case CONTINUE:
                 if (!inLoop)
                     semantic_error(T->pos,"","continue不在循环中");
-                printf("For debug: case CONTINUE, T->Snext=%s; T->Etrue=%s; T->Efalse=%s\n", T->Snext, T->Etrue, T->Efalse);
+                // printf("For debug: case CONTINUE, T->Snext=%s; T->Etrue=%s; T->Efalse=%s\n", T->Snext, T->Etrue, T->Efalse);
                 T->code=merge(2,T->code,genGoto(T->Etrue));
                 break;
     case INCREMENT: 
@@ -669,6 +671,7 @@ void semantic_Analysis(struct node *T)
             T->code=T->ptr[0]->code;
             if (T->ptr[1]){
                 T->ptr[1]->offset=T->ptr[0]->offset+T->ptr[0]->width;
+                T->ptr[1]->isArray=T->ptr[0]->isArray;T->ptr[1]->isArray=T->ptr[0]->isArray;
                 semantic_Analysis(T->ptr[1]); //访问该外部定义列表中的其它外部定义
                 T->code=merge(2,T->code,T->ptr[1]->code);
                 }
@@ -926,10 +929,12 @@ void semantic_Analysis(struct node *T)
                 break;
     case FOR:  // 
                 // 分析初始化的条件
-                T->ptr[0]->offset=T->ptr[1]->offset=T->offset;
+                T->ptr[0]->offset=T->offset;
                 T->ptr[0]->ptr[0]->offset=T->ptr[0]->offset;
                 Exp(T->ptr[0]->ptr[0]); 
-                T->ptr[0]->width = T->ptr[0]->ptr[0]->width;
+                T->ptr[0]->offset += T->ptr[0]->ptr[0]->width;
+                T->offset = T->ptr[1]->offset = T->ptr[0]->offset;
+
                 // 分析循环条件
                 strcpy(T->ptr[0]->ptr[1]->Etrue,newLabel());
                 strcpy(T->ptr[0]->ptr[1]->Efalse,T->Snext);
@@ -945,7 +950,7 @@ void semantic_Analysis(struct node *T)
                 // printf("for debug: FOR: T->ptr[1]->Etrue=%s; T->ptr[1]->Efalse=%s;\n",T->ptr[1]->Etrue,T->ptr[1]->Efalse);
                 // printf("for debug: FOR: T->ptr[1]->kind=%d\n", T->ptr[1]->kind);
                 semantic_Analysis(T->ptr[1]);
-                T->ptr[0]->ptr[2]->offset = T->ptr[0]->offset+T->ptr[0]->ptr[1]->width;
+                T->ptr[0]->ptr[2]->offset = T->ptr[0]->offset+T->ptr[1]->width;
                 semantic_Analysis(T->ptr[0]->ptr[2]); // 分析最后一个表达式
                 if (T->width<T->ptr[1]->width) T->width=T->ptr[1]->width;
                 inLoop = 0; //
@@ -956,7 +961,7 @@ void semantic_Analysis(struct node *T)
                 T->ptr[0]->offset=T->offset;
                 strcpy(T->ptr[0]->Etrue, T->Etrue);
                 strcpy(T->ptr[0]->Efalse, T->Efalse);
-                printf("for debug: EXP_STMT: T->ptr[0]->kind=%d\n", T->ptr[0]->kind);
+                // printf("for debug: EXP_STMT: T->ptr[0]->kind=%d\n", T->ptr[0]->kind);
                 semantic_Analysis(T->ptr[0]);
                 T->code=T->ptr[0]->code;
                 T->width=T->ptr[0]->width;
@@ -1005,13 +1010,15 @@ void semantic_Analysis(struct node *T)
     case DECREMENT:
     case PREDECREMENT:
     case PREINCREMENT:
-    
+                    
                     crementCode = NULL;
                     Exp(T);          //处理基本表达式
                     // 处理完表达式，如果有带链接的自增或者自减运算，那么就需要进行连接
                     if (crementCode) {
                         T->code=merge(2, T->code, crementCode);
                     }
+                    if (crementNode)
+                        free(crementNode);
                     break;
     }
     }
@@ -1028,6 +1035,9 @@ void objectCode(struct codenode *head)
     fprintf(fp,"_ret: .asciiz \"\\n\"\n");
     fprintf(fp,".globl main\n");
     fprintf(fp,".text\n");
+    fprintf(fp,"addi $sp,$zero,0x00002ffc\n");
+    fprintf(fp,"add $t1, $zero, 0x0003310\n");
+    fprintf(fp,"j main\n");
     fprintf(fp,"read:\n");
     fprintf(fp,"  li $v0,4\n");
     fprintf(fp,"  la $a0,_Prompt\n");
@@ -1036,6 +1046,8 @@ void objectCode(struct codenode *head)
     fprintf(fp,"  syscall\n");
     fprintf(fp,"  jr $ra\n");
     fprintf(fp,"write:\n");
+    // fprintf(fp,"  addi $v0,$0,34\n");
+    // fprintf(fp,"  syscall\n");
     fprintf(fp,"  li $v0,1\n");
     fprintf(fp,"  syscall\n");
     fprintf(fp,"  li $v0,4\n");
@@ -1047,7 +1059,8 @@ void objectCode(struct codenode *head)
         switch (h->op) {
             case ASSIGNOP:
                         if (h->opn1.kind==INT)
-                            fprintf(fp, "  li $t3, %d\n", h->opn1.const_int);
+                            // fprintf(fp, "  addi $t3,$0,%d\n", h->opn1.const_int);
+                            fprintf(fp, "  li $t3,%d\n", h->opn1.const_int);
                         else {
                             fprintf(fp, "  lw $t1, %d($sp)\n", h->opn1.offset);
                             fprintf(fp, "  move $t3, $t1\n");

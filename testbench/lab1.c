@@ -13,7 +13,7 @@ struct tree { // 测试结构体
 
 int f(int a, int[] b) {  // 测试函数定义
 	struct tree t1, t2; // 测试结构体变量的定义
-	char a = i = '\\';  // 测试函数char类型、内部变量初始化和复合赋值语句
+	char a = '\\';  // 测试函数char类型
 	int i = 5; // 测试int类型定义和初始化
 	float j = 5.5; 
 
@@ -44,7 +44,6 @@ struct tree { // 测试结构体
 	int i;
 };
 5 = 1;
-
 
 int semantic_Analysis0(struct node T) {
 	

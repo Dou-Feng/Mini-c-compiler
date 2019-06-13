@@ -1,5 +1,23 @@
 ## 编译原理实验
 
+### minic使用方法
+
+如果需要测试源程序的正确性，请进入到“src”文件夹，然后利用终端执行命令
+
+> make
+
+在当前目录下回生成可执行文件minic
+
+使用命令
+
+> ./minic ../testbench/filename.c
+
+即可分析filename.c文件，在终端中会出现语法树AST，报错信息、符号表、中间代码、在当前文件夹下会生成object.s的MPIS汇编代码。
+
+### Logisim CPU的使用方法
+
+在“LogisimCPU”文件夹下有CPU的源文件，需要用Logisim打开。把code.hex导入到CPU的指令RAM中，点击时钟模拟就可以开始执行源程序了。
+
 ### 设计
 
 设计自己的mini-c语言编译器，借助Flex和Bison这两个工具。

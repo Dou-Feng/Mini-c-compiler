@@ -86,7 +86,7 @@ char parse(char *str) {
 			case 't': return '\t';
 			case '0': return '\0';
 			case '\\': return '\\';
-			case '\"': return '\"';
+			case '\"': return '"';
 			case '\'': return '\'';
 			default: return '\0';
 		}

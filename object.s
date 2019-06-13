@@ -3,6 +3,9 @@ _Prompt: .asciiz "Enter an integer:  "
 _ret: .asciiz "\n"
 .globl main
 .text
+addi $sp,$zero,0x00002ffc
+add $t1, $zero, 0x0003310
+j main
 read:
   li $v0,4
   la $a0,_Prompt
@@ -20,102 +23,73 @@ write:
   jr $ra
 
 f:
+  lw $t1, 1($sp)
+  move $t3, $t1
+  sw $t3, 16($sp)
   lw $t1, 0($sp)
   move $t3, $t1
-  sw $t3, 12($sp)
-  lw $t1, 8($sp)
-  move $t3, $t1
   sw $t3, 0($sp)
-  lw $t1, 8($sp)
-  lw $t2, 12($sp)
-  add $t3,$t1,$t2
-  sw $t3, 16($sp)
-  lw $t1, 16($sp)
-  move $t3, $t1
-  sw $t3, 8($sp)
-  lw $v0,8($sp)
-  jr $ra
-label1:
-
-main:
-  addi $sp, $sp, -32
-  li $t3, 1
-  sw $t3, 24($sp)
-  lw $t1, 24($sp)
-  move $t3, $t1
-  sw $t3, 0($sp)
-  li $t3, 1
-  sw $t3, 24($sp)
-  lw $t1, 24($sp)
-  move $t3, $t1
-  sw $t3, 8($sp)
-  addi $sp, $sp, -4
-  sw $ra,0($sp)
-  jal read
-  lw $ra,0($sp)
-  addi $sp, $sp, 4
-  sw $v0, 24($sp)
-  lw $t1, 24($sp)
+  lw $t1, 20($sp)
   move $t3, $t1
   sw $t3, 12($sp)
-  li $t3, 0
-  sw $t3, 24($sp)
-  lw $t1, 24($sp)
-  move $t3, $t1
-  sw $t3, 16($sp)
-label12:
-  lw $t1, 16($sp)
-  lw $t2, 12($sp)
-  blt $t1,$t2,label11
-  j label10
-label11:
-  li $t3, 2
-  sw $t3, 24($sp)
-  lw $t1, 16($sp)
-  lw $t2, 24($sp)
-  blt $t1,$t2,label14
-  j label15
-label14:
-  li $t3, 1
-  sw $t3, 24($sp)
-  lw $a0, 24($sp)
-  addi $sp, $sp, -4
-  sw $ra,0($sp)
-  jal write
-  lw $ra,0($sp)
-  addi $sp, $sp, 4
-  j label13
-label15:
-  move $t0,$sp
-  addi $sp, $sp, -20
-  sw $ra,0($sp)
-  jal f
-  lw $ra,0($sp)
-  addi $sp,$sp,20
-  sw $v0,24($sp)
-  lw $t1, 24($sp)
-  move $t3, $t1
-  sw $t3, 20($sp)
-  lw $a0, 20($sp)
-  addi $sp, $sp, -4
-  sw $ra,0($sp)
-  jal write
-  lw $ra,0($sp)
-  addi $sp, $sp, 4
-label13:
-  li $t3, 1
-  sw $t3, 24($sp)
-  lw $t1, 16($sp)
-  lw $t2, 24($sp)
-  add $t3,$t1,$t2
+  li $t3,1
   sw $t3, 28($sp)
   lw $t1, 28($sp)
   move $t3, $t1
-  sw $t3, 16($sp)
-  j label12
-label10:
-  li $t3, 0
+  sw $t3, 0($sp)
+  li $t3,1
+  sw $t3, 28($sp)
+  lw $t1, 28($sp)
+  move $t3, $t1
+  sw $t3, 8($sp)
+label8:
+  j 
+  j 
+label7:
+  lw $t1, 6($sp)
+  move $t3, $t1
+  sw $t3, 28($sp)
+  lw $t1, 32($sp)
+  move $t3, $t1
+  sw $t3, 12($sp)
+  lw $t1, 28($sp)
+  move $t3, $t1
+  sw $t3, 12($sp)
+  li $t3,1
+  sw $t3, 28($sp)
+  li $t3,2
+  sw $t3, 32($sp)
+  li $t3,3
+  sw $t3, 36($sp)
+  move $t0,$sp
+  addi $sp, $sp, -44
+  sw $ra,0($sp)
+  jal f
+  lw $ra,0($sp)
+  addi $sp,$sp,44
+  sw $v0,40($sp)
+label1:
+
+fx:
+  li $t3,-1
+  sw $t3, 36($sp)
+  lw $t1, 32735($sp)
+  move $t3, $t1
+  sw $t3, 32766($sp)
+  lw $t1, 8($sp)
+  move $t3, $t1
+  sw $t3, 40($sp)
+  li $t3,0
+  sw $t3, 44($sp)
+  lw $t1, 40($sp)
+  lw $t2, 44($sp)
+  div $t1, $t2
+  mflo $t3
+  sw $t3, 48($sp)
+  lw $t1, 48($sp)
+  move $t3, $t1
   sw $t3, 24($sp)
-  lw $v0,24($sp)
-  jr $ra
-label5:
+  lw $t1, 4($sp)
+  move $t3, $t1
+  sw $t3, 32($sp)
+label13:
